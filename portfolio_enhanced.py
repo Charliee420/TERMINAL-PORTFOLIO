@@ -57,38 +57,88 @@ def loading_animation(text="Loading", duration=2):
         i += 1
     print(f'\r{Colors.OKGREEN}✓ Done!{Colors.ENDC}           ')
 
-def print_banner():
-    """Print banner with name on left and ASCII art on right"""
-    
-    # Load and scale down ASCII art for side display
-    ascii_lines = []
+def image_to_ascii(image_path, width=100):
+    """Convert image to colored ASCII art with better detail"""
     try:
-        ascii_art_path = os.path.join(os.path.dirname(__file__), 'ascii-art.txt')
-        with open(ascii_art_path, 'r', encoding='utf-8') as f:
-            all_lines = f.readlines()
-        # Take every 6th line and limit to 30 characters for compact side display
-        ascii_lines = [line[:30].rstrip() for i, line in enumerate(all_lines) if i % 6 == 0][:10]
-    except FileNotFoundError:
-        pass
+        from PIL import Image
+        
+        # Open and resize image
+        img = Image.open(image_path)
+        
+        # Calculate new height to maintain aspect ratio
+        aspect_ratio = img.height / img.width
+        height = int(width * aspect_ratio * 0.45)  # Adjusted for better aspect ratio
+        
+        # Resize image
+        img = img.resize((width, height))
+        img = img.convert('RGB')
+        
+        # More detailed ASCII characters for better quality
+        ascii_chars = ['█', '▓', '▒', '░', '@', '#', 'S', '%', '?', '*', '+', ';', ':', ',', '.', ' ']
+        
+        ascii_art = []
+        for y in range(height):
+            line = ""
+            for x in range(width):
+                r, g, b = img.getpixel((x, y))
+                
+                # Calculate brightness
+                brightness = (r + g + b) / 3
+                char_index = int(brightness / 255 * (len(ascii_chars) - 1))
+                char = ascii_chars[len(ascii_chars) - 1 - char_index]
+                
+                # Add color using ANSI escape codes (True Color RGB)
+                line += f"\033[38;2;{r};{g};{b}m{char}\033[0m"
+            
+            ascii_art.append(line)
+        
+        return '\n'.join(ascii_art)
+    except ImportError:
+        return None
+    except Exception as e:
+        return None
+
+def print_banner():
+    """Print banner with image"""
     
-    # Pad ASCII lines to ensure we have exactly 10 lines
-    while len(ascii_lines) < 10:
-        ascii_lines.append("")
+    # Try to display the PNG image as high-quality ASCII art
+    image_path = os.path.join(os.path.dirname(__file__), 'Charliee.png')
+    image_ascii = image_to_ascii(image_path, width=100)  # Larger width for more detail
     
-    # Create side-by-side layout: Name on left, ASCII art on right
-    print(f"""{Colors.OKCYAN}
-╔═════════════════════════════════════════════════════════════╗
-║                                                             ║
-║   ██████╗██╗  ██╗ █████╗ ██████╗ ██╗     ██╗███████╗███████╗║
-║  ██╔════╝██║  ██║██╔══██╗██╔══██╗██║     ██║██╔════╝██╔════╝║
-║  ██║     ███████║███████║██████╔╝██║     ██║█████╗  █████╗  ║
-║  ██║     ██╔══██║██╔══██║██╔══██╗██║     ██║██╔══╝  ██╔══╝  ║
-║  ╚██████╗██║  ██║██║  ██║██║  ██║███████╗██║███████╗███████╗║
-║   ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚══════╝╚══════╝║
-║                                                             ║
-║                Developer | Designer | Builder               ║
-║                                                             ║
-╚═════════════════════════════════════════════════════════════╝
+    if image_ascii:
+        # Display the image
+        print(image_ascii)
+        print()  # Add spacing
+    else:
+        # Fallback to text-based ASCII art from file
+        ascii_lines = []
+        try:
+            ascii_art_path = os.path.join(os.path.dirname(__file__), 'ascii-art.txt')
+            with open(ascii_art_path, 'r', encoding='utf-8') as f:
+                all_lines = f.readlines()
+            # Take every 6th line and limit to 30 characters for compact side display
+            ascii_lines = [line[:30].rstrip() for i, line in enumerate(all_lines) if i % 6 == 0][:10]
+        except FileNotFoundError:
+            pass
+        
+        # Pad ASCII lines to ensure we have exactly 10 lines
+        while len(ascii_lines) < 10:
+            ascii_lines.append("")
+        
+        # Create side-by-side layout: Name on left, ASCII art on right
+        print(f"""{Colors.OKCYAN}
+╔═══════════════════════════════════════════╗  {Colors.GRAY}{ascii_lines[0]:<30}{Colors.OKCYAN}
+║                                           ║  {Colors.GRAY}{ascii_lines[1]:<30}{Colors.OKCYAN}
+║   ██████╗██╗  ██╗ █████╗ ██████╗ ██╗   ██╗║  {Colors.GRAY}{ascii_lines[2]:<30}{Colors.OKCYAN}
+║  ██╔════╝██║  ██║██╔══██╗██╔══██╗██║   ██║║  {Colors.GRAY}{ascii_lines[3]:<30}{Colors.OKCYAN}
+║  ██║     ███████║███████║██████╔╝██║   ██║║  {Colors.GRAY}{ascii_lines[4]:<30}{Colors.OKCYAN}
+║  ██║     ██╔══██║██╔══██║██╔══██╗██║   ██║║  {Colors.GRAY}{ascii_lines[5]:<30}{Colors.OKCYAN}
+║  ╚██████╗██║  ██║██║  ██║██║  ██║███████╔╝║  {Colors.GRAY}{ascii_lines[6]:<30}{Colors.OKCYAN}
+║   ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ║  {Colors.GRAY}{ascii_lines[7]:<30}{Colors.OKCYAN}
+║                                           ║  {Colors.GRAY}{ascii_lines[8]:<30}{Colors.OKCYAN}
+║      Developer | Designer | Builder       ║  {Colors.GRAY}{ascii_lines[9]:<30}{Colors.OKCYAN}
+║                                           ║  
+╚═══════════════════════════════════════════╝
 {Colors.ENDC}""")
 
 def print_welcome():
